@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/navigation"
+    app:startDestination="@id/navigation_cards">
+
+    <fragment
+        android:id="@+id/navigation_cards"
+        android:name="com.itolstoy.hearthstonecardviewer.presentation.cards.CardListFragment"
+        android:label="@string/title_cards">
+        <action
+            android:id="@+id/action_navigation_cards_to_cardFragment"
+            app:destination="@id/navigation_card_fragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_favourites"
+        android:name="com.itolstoy.hearthstonecardviewer.presentation.favourites.CardFavouritesFragment"
+        android:label="@string/title_favourites">
+        <action
+            android:id="@+id/action_navigation_favourites_to_cardFragment"
+            app:destination="@id/navigation_card_fragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigation_card_fragment"
+        android:name="com.itolstoy.hearthstonecardviewer.presentation.details.CardFragment"
+        android:label="CardFragment" >
+        <argument
+            android:name="cardPosition"
+            app:argType="integer"
+            android:defaultValue="0" />
+        <argument
+            android:name="isFavourites"
+            app:argType="boolean"
+            android:defaultValue="false" />
+        <argument
+            android:name="cardIds"
+            app:argType="string[]" />
+    </fragment>
+</navigation>

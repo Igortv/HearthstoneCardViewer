@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">HearthstoneCardViewer</string>
+    <string name="title_cards">Cards</string>
+    <string name="title_favourites">Favourites</string>
+</resources>
