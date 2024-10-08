@@ -8,7 +8,7 @@ import com.itolstoy.hearthstonecardviewer.data.toCardDbo
 import com.itolstoy.hearthstonecardviewer.data.toDbo
 import com.itolstoy.hearthstonecardviewer.data.toFavouriteDbo
 import com.itolstoy.hearthstonecardviewer.domain.Card
-import com.itolstoy.hearthstonecardviewer.domain.CardRepository
+import com.itolstoy.hearthstonecardviewer.domain.repository.CardRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -30,25 +30,16 @@ class CardRepositoryImpl @Inject constructor(
 
     }
 
-    override suspend fun getCardsByIdsInBatches(cardIds: List<String>, batchSize: Int): List<Card> {
-        val result = mutableListOf<Card>()
-        val batches = cardIds.chunked(batchSize)
+    override suspend fun getCardsByIds(cardIds: List<String>): List<Card> {
+        val cards = cardsRoomDatabase.cardDao().getCardsByIds(cardIds)
+        val cardMap = cards.associateBy { it.cardId }
+        val sortedCardsByIdsOrder = cardIds.mapNotNull { cardMap[it] }
 
-        for (batch in batches) {
-            val cardsBatch = cardsRoomDatabase.cardDao().getCardsByIds(batch)
-            result.addAll(cardsBatch.map { it.toCard() })
-        }
-
-        return result.sortedBy { card -> cardIds.indexOf(card.cardId) }
+        return sortedCardsByIdsOrder.map { it.toCard() }
     }
 
     override fun observeFavouritesCardFromDatabase(): Flow<List<Card>> {
         return cardsRoomDatabase.cardDao().observeFavouritesCardsFromDatabase().map { list -> list.map { it.toCard() } }
-    }
-
-    override suspend fun getCardsByIds(cardIds: List<String>): List<Card> {
-        val cardsDbo = cardsRoomDatabase.cardDao().getCardsByIds(cardIds)
-        return cardsDbo.map { it.toCard() }
     }
 
     override suspend fun getFavouritesCard(): List<Card> {

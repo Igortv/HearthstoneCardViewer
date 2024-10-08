@@ -11,10 +11,12 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
+import com.itolstoy.hearthstonecardviewer.MainActivity
+import com.itolstoy.hearthstonecardviewer.R
 import com.itolstoy.hearthstonecardviewer.databinding.FragmentFavouritesBinding
 import com.itolstoy.hearthstonecardviewer.presentation.adapter.CardAdapter
+import com.itolstoy.hearthstonecardviewer.presentation.details.CardFragment
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -23,6 +25,7 @@ class CardFavouritesFragment : Fragment() {
     private var _binding: FragmentFavouritesBinding? = null
     private val binding get() = _binding!!
     private val viewModel: CardFavouritesViewModel by viewModels()
+    private lateinit var cardAdapter: CardAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -35,12 +38,24 @@ class CardFavouritesFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val cardAdapter = CardAdapter { position->
-            val cardIds = viewModel.cards.map { it.cardId }
-            val action = CardFavouritesFragmentDirections.actionNavigationFavouritesToCardFragment(cardIds.toTypedArray())
-                .setCardPosition(position)
-                .setIsFavourites(true)
-            findNavController().navigate(action)
+        cardAdapter = CardAdapter { position->
+            val cardIds = cardAdapter.getCards().map { it.cardId }
+            viewModel.saveCardIds(cardIds)
+            viewLifecycleOwner.lifecycleScope.launch {
+                viewModel.cardIdsSavedState.collect { isSaved ->
+                    if (isSaved) {
+                        val cardFragment = CardFragment().apply {
+                            arguments = bundleOf(CardFragment.POSITION_ARG to position)
+                        }
+                        requireActivity().supportFragmentManager.beginTransaction()
+                            .add(R.id.nav_host_fragment_activity_main, cardFragment)
+                            .addToBackStack(null)
+                            .commit()
+                        (requireActivity() as MainActivity).binding.navView.visibility = View.GONE
+                    }
+                }
+            }
+
         }
 
         binding.recyclerView.apply {
@@ -54,18 +69,39 @@ class CardFavouritesFragment : Fragment() {
                 isRefreshing = false
             }
         }
+
+        lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.CREATED) {
+                viewModel.stateFlow.collect { uiState ->
+                    when (uiState) {
+                        is CardFavouritesFragmentState.OK -> {
+                            binding.progressBar.visibility = View.GONE
+                        }
+                        is CardFavouritesFragmentState.Loading -> {
+                            binding.progressBar.visibility = View.VISIBLE
+                        }
+                        is CardFavouritesFragmentState.Success -> {
+                            binding.progressBar.visibility = View.GONE
+                        }
+                        is CardFavouritesFragmentState.Error -> {
+                            binding.progressBar.visibility = View.GONE
+                        }
+                    }
+                }
+            }
+        }
+
         lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.CREATED) {
                 viewModel.cardsFlow.collect { cards ->
                     cardAdapter.setCards(cards)
-                    setFragmentResult(
-                        "favourite_screen_changes_key",
-                        bundleOf("changed" to true)
-                    )
+                    viewModel.saveCards(cards)
+                    setFragmentResult("card_favourites_key", bundleOf("changed" to true))
                 }
             }
         }
     }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

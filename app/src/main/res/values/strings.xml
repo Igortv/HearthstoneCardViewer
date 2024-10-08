@@ -2,4 +2,8 @@
     <string name="app_name">HearthstoneCardViewer</string>
     <string name="title_cards">Cards</string>
     <string name="title_favourites">Favourites</string>
+    <string name="sort_by_class">Сортировать по классу</string>
+    <string name="sort_by_cost">Сортировать по стоимости</string>
+    <string name="ascending">По возрастанию</string>
+    <string name="descending">По убыванию</string>
 </resources>

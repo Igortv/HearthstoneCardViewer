@@ -2,80 +2,48 @@ package com.itolstoy.hearthstonecardviewer
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
-import androidx.navigation.NavController
-import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.navOptions
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.setupActionBarWithNavController
-import androidx.navigation.ui.setupWithNavController
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.fragment.app.Fragment
 import com.itolstoy.hearthstonecardviewer.databinding.ActivityMainBinding
+import com.itolstoy.hearthstonecardviewer.presentation.cards.CardListFragment
+import com.itolstoy.hearthstonecardviewer.presentation.favourites.CardFavouritesFragment
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityMainBinding
-    private lateinit var navController: NavController
+    lateinit var binding: ActivityMainBinding
+    private var activeFragment: Fragment? = null
+    private val fragmentManager = supportFragmentManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        val cardsFragment = CardListFragment()
+        val favouritesFragment = CardFavouritesFragment()
 
-        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main) as NavHostFragment
-        navController = navHostFragment.navController
-        val navView: BottomNavigationView = binding.navView
-
-        val appBarConfiguration = AppBarConfiguration(
-            setOf(
-                R.id.navigation_cards, R.id.navigation_favourites, R.id.navigation_card_fragment
-            ))
-        setupActionBarWithNavController(navController, appBarConfiguration)
-        navController.addOnDestinationChangedListener { _, destination, _ ->
-            when(destination.id) {
-                R.id.navigation_card_fragment -> {
-                    binding.navView.visibility = View.GONE
-                }
-                else -> {
-                    binding.navView.visibility = View.VISIBLE
-                }
-            }
+        fragmentManager.beginTransaction().apply {
+            add(R.id.nav_host_fragment_activity_main, cardsFragment, "cards")
+            add(R.id.nav_host_fragment_activity_main, favouritesFragment, "favourites")
+            hide(favouritesFragment)
+            commit()
         }
-        navView.setOnItemSelectedListener { item ->
-            when(item.itemId) {
-                R.id.navigation_cards -> {
-                    navController.navigate(R.id.navigation_cards, null, navOptions {
-                        popUpTo(R.id.navigation_cards) { saveState = true }
-                        restoreState = true
-                    })
 
-                    true
-                }
-                R.id.navigation_favourites -> {
-                    navController.navigate(R.id.navigation_favourites, null, navOptions {
-                        popUpTo(R.id.navigation_favourites) { saveState = true }
-                        restoreState = true
-                    })
+        activeFragment = cardsFragment
 
-                    true
-                }
-                else -> false
-            }
-        }
-        /*navView.setOnItemSelectedListener { item ->
+        binding.navView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_cards -> {
-                    navView.selectedItemId = R.id.navigation_cards
+                    fragmentManager.beginTransaction().hide(activeFragment!!).show(cardsFragment).commit()
+                    activeFragment = cardsFragment
                     true
                 }
                 R.id.navigation_favourites -> {
-                    navView.selectedItemId = R.id.navigation_favourites
+                    fragmentManager.beginTransaction().hide(activeFragment!!).show(favouritesFragment).commit()
+                    activeFragment = favouritesFragment
                     true
                 }
                 else -> false
             }
-        }*/
-        navView.setupWithNavController(navController)
+        }
     }
 }

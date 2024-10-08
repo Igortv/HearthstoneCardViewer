@@ -1,7 +1,7 @@
 package com.itolstoy.hearthstonecardviewer.domain.usecase
 
 import com.itolstoy.hearthstonecardviewer.domain.Card
-import com.itolstoy.hearthstonecardviewer.domain.CardRepository
+import com.itolstoy.hearthstonecardviewer.domain.repository.CardRepository
 import com.itolstoy.hearthstonecardviewer.domain.common.Resource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

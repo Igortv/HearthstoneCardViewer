@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.OnBackPressedCallback
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResult
@@ -12,6 +13,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.navArgs
+import com.itolstoy.hearthstonecardviewer.MainActivity
 import com.itolstoy.hearthstonecardviewer.databinding.FragmentCardBinding
 import com.itolstoy.hearthstonecardviewer.presentation.adapter.CardSliderAdapter
 import dagger.hilt.android.AndroidEntryPoint
@@ -24,6 +26,10 @@ class CardFragment : Fragment() {
     val args: CardFragmentArgs by navArgs()
     private val viewModel: CardFragmentViewModel by viewModels()
 
+    companion object {
+        const val POSITION_ARG = "cardPosition"
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -35,8 +41,7 @@ class CardFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val cardPosition = args.cardPosition
-        val cardIds = args.cardIds.toList()
+        val cardPosition = arguments?.getInt(POSITION_ARG) ?: 0
 
         val cardSliderAdapter = CardSliderAdapter (
             notifyDatasetChangedCallback = {
@@ -72,14 +77,36 @@ class CardFragment : Fragment() {
                 }
             }
         }
-        if (args.isFavourites) {
-            viewModel.getFavouritesCards()
-        } else {
-            viewModel.getAllCards()
+
+        viewModel.getCardIds()
+
+        lifecycleScope.launch {
+            viewModel.cardIdsFlow.collect { cardIds ->
+                if (cardIds.isNotEmpty()) {
+                    viewModel.getCardsByIds(cardIds)
+                }
+            }
         }
+
+        val callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                handleBackButtonPressed()
+            }
+        }
+
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, callback)
     }
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun handleBackButtonPressed() {
+        if (requireActivity().supportFragmentManager.backStackEntryCount > 0) {
+            requireActivity().supportFragmentManager.popBackStack()
+            (requireActivity() as MainActivity).binding.navView.visibility = View.VISIBLE
+        } else {
+            requireActivity().finish()
+        }
     }
 }

@@ -23,6 +23,10 @@ class CardAdapter(
         //differ.submitList(cards)
     }
 
+    fun getCards(): List<Card> {
+        return cards
+    }
+
     inner class CardViewHolder(private var view: CardItemBinding) : RecyclerView.ViewHolder(view.root) {
         fun bindCard(card: Card) {
             view.cardName.text = card.name
@@ -67,7 +71,7 @@ class CardAdapter(
         }
     }
 
-    /*private val differCallback = object : DiffUtil.ItemCallback<Card>() {
+    private val differCallback = object : DiffUtil.ItemCallback<Card>() {
         override fun areItemsTheSame(oldItem: Card, newItem: Card): Boolean {
             return oldItem.cardId == newItem.cardId
         }
@@ -77,5 +81,5 @@ class CardAdapter(
         }
     }
 
-    val differ = AsyncListDiffer(this, differCallback)*/
+    val differ = AsyncListDiffer(this, differCallback)
 }

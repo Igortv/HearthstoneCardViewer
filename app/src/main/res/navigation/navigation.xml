@@ -8,6 +8,9 @@
         android:id="@+id/navigation_cards"
         android:name="com.itolstoy.hearthstonecardviewer.presentation.cards.CardListFragment"
         android:label="@string/title_cards">
+        <!--<action
+            android:id="@+id/action_navigation_card_to_navigation_favourites"
+            app:destination="@id/navigation_favourites"/>-->
         <action
             android:id="@+id/action_navigation_cards_to_cardFragment"
             app:destination="@id/navigation_card_fragment" />
@@ -17,6 +20,9 @@
         android:id="@+id/navigation_favourites"
         android:name="com.itolstoy.hearthstonecardviewer.presentation.favourites.CardFavouritesFragment"
         android:label="@string/title_favourites">
+        <!--<action
+            android:id="@+id/action_navigation_favourites_to_navigation_cards"
+            app:destination="@id/navigation_cards"/>-->
         <action
             android:id="@+id/action_navigation_favourites_to_cardFragment"
             app:destination="@id/navigation_card_fragment" />
@@ -34,8 +40,5 @@
             android:name="isFavourites"
             app:argType="boolean"
             android:defaultValue="false" />
-        <argument
-            android:name="cardIds"
-            app:argType="string[]" />
     </fragment>
 </navigation>

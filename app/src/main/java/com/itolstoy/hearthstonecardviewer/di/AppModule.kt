@@ -1,6 +1,10 @@
 package com.itolstoy.hearthstonecardviewer.di
 
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.room.Room
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -10,9 +14,9 @@ import com.itolstoy.hearthstonecardviewer.domain.common.Constants
 import com.itolstoy.hearthstonecardviewer.data.remote.ApiKeyInterceptor
 import com.itolstoy.hearthstonecardviewer.data.remote.CardsApi
 import com.itolstoy.hearthstonecardviewer.data.repository.CardRepositoryImpl
-import com.itolstoy.hearthstonecardviewer.domain.CardRepository
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.itolstoy.hearthstonecardviewer.data.repository.PreferencesRepositoryImpl
+import com.itolstoy.hearthstonecardviewer.domain.repository.CardRepository
+import com.itolstoy.hearthstonecardviewer.domain.repository.PreferencesRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -92,6 +96,22 @@ object AppModule {
     @Singleton
     fun provideDao(cardsRoomDatabase: CardsRoomDatabase): CardsDao {
         return cardsRoomDatabase.cardDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
+        return PreferenceDataStoreFactory.create(
+            produceFile = { context.preferencesDataStoreFile("app_preferences") }
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePreferencesRepository(
+        dataStore: DataStore<Preferences>
+    ): PreferencesRepository {
+        return PreferencesRepositoryImpl(dataStore)
     }
 
     @Provides
