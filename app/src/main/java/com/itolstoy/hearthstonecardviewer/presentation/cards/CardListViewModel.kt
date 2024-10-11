@@ -5,15 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.itolstoy.hearthstonecardviewer.domain.Card
 import com.itolstoy.hearthstonecardviewer.domain.usecase.GetCardsUseCase
 import com.itolstoy.hearthstonecardviewer.domain.common.Resource
-import com.itolstoy.hearthstonecardviewer.domain.usecase.GetCardIdsUseCase
-import com.itolstoy.hearthstonecardviewer.domain.usecase.GetCardsByIdsUseCase
 import com.itolstoy.hearthstonecardviewer.domain.usecase.SaveCardIdsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -65,7 +62,7 @@ class CardListViewModel @Inject constructor(
                 card.name.contains(query, ignoreCase = true)
             }
             filteredCards = result
-            _stateFlow.update { CardListFragmentState.FilteredCards(result) }
+            _stateFlow.value = CardListFragmentState.FilteredCards(result)
         }
     }
 
@@ -73,7 +70,7 @@ class CardListViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             getCardsUseCase.invoke()
                 .collect { result ->
-                _stateFlow.update {
+                _stateFlow.value =
                     when(result) {
                         is Resource.Loading -> CardListFragmentState.Loading
                         is Resource.Success -> {
@@ -102,7 +99,6 @@ class CardListViewModel @Inject constructor(
                         }
                         is Resource.Error -> CardListFragmentState.Error(result.message ?: "")
                     }
-                }
             }
         }
     }
@@ -131,7 +127,7 @@ class CardListViewModel @Inject constructor(
                 _cardsFlow.value.sortedByDescending { it.cost }
             }
             cards = sortedCards
-            _cardsFlow.emit(sortedCards)
+            _cardsFlow.value = sortedCards
         }
     }
 
@@ -139,7 +135,7 @@ class CardListViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             getCardsUseCase.invoke()
                 .collect { result ->
-                    _stateFlow.update {
+                    _stateFlow.value =
                         when(result) {
                             is Resource.Loading -> CardListFragmentState.Loading
                             is Resource.Success -> {
@@ -156,15 +152,18 @@ class CardListViewModel @Inject constructor(
                             }
                             is Resource.Error -> CardListFragmentState.Error(result.message ?: "")
                         }
-                    }
                 }
         }
     }
 
     fun saveCardIds(cardIds: List<String>) {
         viewModelScope.launch {
-            saveCardIdsUseCase(cardIds)
+            saveCardIdsUseCase.invoke(cardIds)
             _cardIdsSavedState.value = true
         }
+    }
+
+    fun resetCardIdsSavedState() {
+        _cardIdsSavedState.value = false
     }
 }

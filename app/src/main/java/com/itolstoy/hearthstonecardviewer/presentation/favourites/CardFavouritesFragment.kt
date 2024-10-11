@@ -18,6 +18,7 @@ import com.itolstoy.hearthstonecardviewer.databinding.FragmentFavouritesBinding
 import com.itolstoy.hearthstonecardviewer.presentation.adapter.CardAdapter
 import com.itolstoy.hearthstonecardviewer.presentation.details.CardFragment
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -44,6 +45,7 @@ class CardFavouritesFragment : Fragment() {
             viewLifecycleOwner.lifecycleScope.launch {
                 viewModel.cardIdsSavedState.collect { isSaved ->
                     if (isSaved) {
+                        viewModel.resetCardIdsSavedState()
                         val cardFragment = CardFragment().apply {
                             arguments = bundleOf(CardFragment.POSITION_ARG to position)
                         }
@@ -71,7 +73,7 @@ class CardFavouritesFragment : Fragment() {
         }
 
         lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.CREATED) {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.stateFlow.collect { uiState ->
                     when (uiState) {
                         is CardFavouritesFragmentState.OK -> {
@@ -92,8 +94,8 @@ class CardFavouritesFragment : Fragment() {
         }
 
         lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.CREATED) {
-                viewModel.cardsFlow.collect { cards ->
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.cardsFlow.distinctUntilChanged().collect { cards ->
                     cardAdapter.setCards(cards)
                     viewModel.saveCards(cards)
                     setFragmentResult("card_favourites_key", bundleOf("changed" to true))

@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -46,7 +45,7 @@ class CardFavouritesViewModel @Inject constructor(
     fun getFavouritesCards() {
         viewModelScope.launch(Dispatchers.IO) {
             getCardsUseCase.invoke().collect { result ->
-                _stateFlow.update {
+                _stateFlow.value =
                     when(result) {
                         is Resource.Loading -> CardFavouritesFragmentState.Loading
                         is Resource.Success -> {
@@ -58,7 +57,6 @@ class CardFavouritesViewModel @Inject constructor(
                         }
                         is Resource.Error -> CardFavouritesFragmentState.Error(result.message ?: "")
                     }
-                }
             }
         }
     }
@@ -70,8 +68,12 @@ class CardFavouritesViewModel @Inject constructor(
 
     fun saveCardIds(cardIds: List<String>) {
         viewModelScope.launch {
-            saveCardIdsUseCase(cardIds)
+            saveCardIdsUseCase.invoke(cardIds)
             _cardIdsSavedState.value = true
         }
+    }
+
+    fun resetCardIdsSavedState() {
+        _cardIdsSavedState.value = false
     }
 }

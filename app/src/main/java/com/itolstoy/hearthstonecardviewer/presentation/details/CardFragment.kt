@@ -12,7 +12,6 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.navArgs
 import com.itolstoy.hearthstonecardviewer.MainActivity
 import com.itolstoy.hearthstonecardviewer.databinding.FragmentCardBinding
 import com.itolstoy.hearthstonecardviewer.presentation.adapter.CardSliderAdapter
@@ -23,7 +22,6 @@ import kotlinx.coroutines.launch
 class CardFragment : Fragment() {
     private var _binding: FragmentCardBinding? = null
     private val binding get() = _binding!!
-    val args: CardFragmentArgs by navArgs()
     private val viewModel: CardFragmentViewModel by viewModels()
 
     companion object {
@@ -59,7 +57,7 @@ class CardFragment : Fragment() {
         binding.viewPager.adapter = cardSliderAdapter
 
         lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.CREATED) {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.stateFlow.collect { uiState ->
                     when (uiState) {
                         is CardFragmentState.Loading -> {
@@ -81,9 +79,11 @@ class CardFragment : Fragment() {
         viewModel.getCardIds()
 
         lifecycleScope.launch {
-            viewModel.cardIdsFlow.collect { cardIds ->
-                if (cardIds.isNotEmpty()) {
-                    viewModel.getCardsByIds(cardIds)
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.cardIdsFlow.collect { cardIds ->
+                    if (cardIds.isNotEmpty()) {
+                        viewModel.getCardsByIds(cardIds)
+                    }
                 }
             }
         }

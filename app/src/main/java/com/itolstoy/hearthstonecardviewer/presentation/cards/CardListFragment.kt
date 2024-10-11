@@ -1,7 +1,6 @@
 package com.itolstoy.hearthstonecardviewer.presentation.cards
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -32,8 +31,6 @@ class CardListFragment : Fragment() {
     private val binding get() = _binding!!
     private val viewModel: CardListViewModel by viewModels()
     lateinit var cardAdapter: CardAdapter
-    private var currentAdapterPosition = 0
-    private var tempAdapterPosition = 0
     var firstVisibleItemPosition = 0
     var topOffset = 0
     var tempFirstVisibleItemPosition = 0
@@ -57,6 +54,7 @@ class CardListFragment : Fragment() {
             viewLifecycleOwner.lifecycleScope.launch {
                 viewModel.cardIdsSavedState.collect { isSaved ->
                     if (isSaved) {
+                        viewModel.resetCardIdsSavedState()
                         val cardFragment = CardFragment().apply {
                             arguments = bundleOf(CardFragment.POSITION_ARG to position)
                         }
@@ -109,7 +107,7 @@ class CardListFragment : Fragment() {
         }
 
         lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.CREATED) {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.cardsFlow.collect { cards ->
                     cardAdapter.setCards(cards)
                 }
@@ -139,7 +137,7 @@ class CardListFragment : Fragment() {
         }
 
         lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.CREATED) {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.stateFlow
                     .collect { uiState ->
                     when (uiState) {
@@ -192,7 +190,6 @@ class CardListFragment : Fragment() {
                     if (flag) {
                         disableSortingControls()
 
-                        tempAdapterPosition = currentAdapterPosition
                         tempFirstVisibleItemPosition = firstVisibleItemPosition
                         tempTopOffset = topOffset
                         flag = false
