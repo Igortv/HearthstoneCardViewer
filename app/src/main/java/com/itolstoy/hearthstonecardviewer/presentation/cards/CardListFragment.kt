@@ -48,24 +48,9 @@ class CardListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        cardAdapter = CardAdapter { position->
+        cardAdapter = CardAdapter { cardPosition->
             val cardIds = cardAdapter.getCards().map { it.cardId }
-            viewModel.saveCardIds(cardIds)
-            viewLifecycleOwner.lifecycleScope.launch {
-                viewModel.cardIdsSavedState.collect { isSaved ->
-                    if (isSaved) {
-                        viewModel.resetCardIdsSavedState()
-                        val cardFragment = CardFragment().apply {
-                            arguments = bundleOf(CardFragment.POSITION_ARG to position)
-                        }
-                            requireActivity().supportFragmentManager.beginTransaction()
-                                .add(R.id.nav_host_fragment_activity_main, cardFragment)
-                                .addToBackStack(null)
-                                .commit()
-                        (requireActivity() as MainActivity).binding.navView.visibility = View.GONE
-                    }
-                }
-            }
+            viewModel.saveCardIdsAndPosition(cardIds, cardPosition)
         }
 
         val sortOptions = arrayOf(getString(R.string.sort_by_class), getString(R.string.sort_by_cost))
@@ -158,6 +143,17 @@ class CardListFragment : Fragment() {
                         is CardListFragmentState.FilteredCards -> {
                             cardAdapter.setCards(uiState.list)
                             binding.recyclerView.scrollToPosition(0)
+                        }
+                        is CardListFragmentState.CardIdsSavedAndReadyToShowDetails -> {
+                            val cardFragment = CardFragment().apply {
+                                arguments = bundleOf(CardFragment.POSITION_ARG to uiState.cardPosition)
+                            }
+                            requireActivity().supportFragmentManager.beginTransaction()
+                                .add(R.id.nav_host_fragment_activity_main, cardFragment)
+                                .addToBackStack(null)
+                                .commit()
+                            (requireActivity() as MainActivity).binding.navView.visibility = View.GONE
+                            binding.progressBar.visibility = View.GONE
                         }
                         is CardListFragmentState.Error -> {
                             binding.progressBar.visibility = View.GONE

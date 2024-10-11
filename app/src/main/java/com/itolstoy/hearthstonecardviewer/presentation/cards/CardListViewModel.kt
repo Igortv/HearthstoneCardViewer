@@ -19,6 +19,7 @@ sealed class CardListFragmentState {
     data class Success(val list: List<Card>) : CardListFragmentState()
     data class FilteredCards(val list: List<Card>) : CardListFragmentState()
     data class AddedFromSearchList(val list: List<Card>) : CardListFragmentState()
+    data class CardIdsSavedAndReadyToShowDetails(val cardPosition: Int) : CardListFragmentState()
     data class Error(val message: String) : CardListFragmentState()
     data object Loading : CardListFragmentState()
 }
@@ -42,9 +43,6 @@ class CardListViewModel @Inject constructor(
 
     private var sortOrder: SortOrder = SortOrder.ASCENDING
     private var sortType: SortType = SortType.CLASS
-
-    private val _cardIdsSavedState = MutableStateFlow(false)
-    val cardIdsSavedState: StateFlow<Boolean> get() = _cardIdsSavedState
 
     private val _cardsFlow = MutableStateFlow<List<Card>>(emptyList())
     val cardsFlow: StateFlow<List<Card>> get() = _cardsFlow
@@ -156,14 +154,11 @@ class CardListViewModel @Inject constructor(
         }
     }
 
-    fun saveCardIds(cardIds: List<String>) {
+    fun saveCardIdsAndPosition(cardIds: List<String>, cardPosition: Int) {
         viewModelScope.launch {
+            _stateFlow.value = CardListFragmentState.Loading
             saveCardIdsUseCase.invoke(cardIds)
-            _cardIdsSavedState.value = true
+            _stateFlow.value = CardListFragmentState.CardIdsSavedAndReadyToShowDetails(cardPosition)
         }
-    }
-
-    fun resetCardIdsSavedState() {
-        _cardIdsSavedState.value = false
     }
 }

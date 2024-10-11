@@ -19,6 +19,7 @@ import javax.inject.Inject
 sealed class CardFavouritesFragmentState {
     data object OK : CardFavouritesFragmentState()
     data class Success(val list: List<Card>) : CardFavouritesFragmentState()
+    data class CardIdsSavedAndReadyToShowDetails(val cardPosition: Int) : CardFavouritesFragmentState()
     data class Error(val message: String) : CardFavouritesFragmentState()
     data object Loading : CardFavouritesFragmentState()
 }
@@ -34,9 +35,6 @@ class CardFavouritesViewModel @Inject constructor(
     )
     val stateFlow: StateFlow<CardFavouritesFragmentState>
         get() = _stateFlow.asStateFlow()
-
-    private val _cardIdsSavedState = MutableStateFlow(false)
-    val cardIdsSavedState: StateFlow<Boolean> get() = _cardIdsSavedState
 
     var cards: List<Card> = listOf()
 
@@ -66,14 +64,11 @@ class CardFavouritesViewModel @Inject constructor(
     }
 
 
-    fun saveCardIds(cardIds: List<String>) {
+    fun saveCardIds(cardIds: List<String>, cardPosition: Int) {
         viewModelScope.launch {
+            _stateFlow.value = CardFavouritesFragmentState.Loading
             saveCardIdsUseCase.invoke(cardIds)
-            _cardIdsSavedState.value = true
+            _stateFlow.value = CardFavouritesFragmentState.CardIdsSavedAndReadyToShowDetails(cardPosition)
         }
-    }
-
-    fun resetCardIdsSavedState() {
-        _cardIdsSavedState.value = false
     }
 }
